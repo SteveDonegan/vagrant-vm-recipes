@@ -1,0 +1,25 @@
+# -*- mode: ruby -*-
+# vi: set ft=ruby :
+
+Vagrant.configure("2") do |config|
+  config.vm.box = "cedadev/centos7"
+  config.vm.box_version = "0.0.1"
+  config.vm.synced_folder "C:/vagrant-shares/general", "/vagrant-share", type: "nfs"
+  config.vm.network "private_network", ip: "192.168.50.70"
+  
+# copy the root key
+config.vm.provision :shell, inline: <<SHELL
+set -x
+mkdir -p /root/.ssh
+cp ~vagrant/.ssh/authorized_keys /root/.ssh
+yum install -y git
+
+echo "[user]" > /home/vagrant/.gitconfig
+echo "        name = Ag Stephens" >> /home/vagrant/.gitconfig
+echo "        email = ag.stephens@stfc.ac.uk" >> /home/vagrant/.gitconfig
+chown vagrant.vagrant /home/vagrant/.gitconfig
+
+cp /home/vagrant/.gitconfig /root/.gitconfig
+SHELL
+
+end
