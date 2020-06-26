@@ -1,2 +1,2 @@
 # vagrant-vm-recipes
-Steve specific
+My own set of VM recipes to be used with vagrant for glamod etc,
