@@ -1,0 +1,1 @@
+{"virtualbox":{"/vagrant-share":{"guestpath":"/vagrant-share","hostpath":"C:/workspace/vagrant/vms/centos7-miniconda-py3","disabled":false,"__vagrantfile":true},"/vagrant":{"guestpath":"/vagrant","hostpath":"C:/workspace/vagrant/vagrant-vm-recipes/relay_hub","disabled":false,"__vagrantfile":true}}}
