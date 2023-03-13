@@ -4,7 +4,7 @@
 Vagrant.configure("2") do |config|
   config.vm.box = "cedadev/centos7"
   config.vm.box_version = "0.0.1"
-  config.vm.synced_folder "C:/workspace/vagrant/vms/centos7-miniconda-py3-ansible_host", "/vagrant-share", type: "nfs"
+  config.vm.synced_folder "C:/vagrant-shares/general", "/vagrant-share", mount_options: ["dmode=755,fmode=644"]
   config.vm.network "private_network", ip: "192.168.50.70"
   
   
@@ -19,6 +19,41 @@ echo "[user]" > /home/vagrant/.gitconfig
 echo "        name = Steve Donegan" >> /home/vagrant/.gitconfig
 echo "        email = steve.donegan@stfc.ac.uk" >> /home/vagrant/.gitconfig
 chown vagrant.vagrant /home/vagrant/.gitconfig
+
+#install python 3.8 as per https://vinodpandey.com/how-to-install-python3-on-centos-7/
+yum -y install wget make gcc openssl-devel bzip2-devel
+
+mkdir -p /tmp/
+
+cd /tmp
+
+wget https://www.python.org/ftp/python/3.8.7/Python-3.8.7.tgz
+
+tar xzf Python-3.8.7.tgz
+
+cd Python-3.8.7
+./configure --enable-optimizations
+
+make altinstall
+
+ln -sfn /usr/local/bin/python3.8 /usr/bin/python3.8
+ln -sfn /usr/local/bin/pip3.8 /usr/bin/pip3.8
+
+pip3.8 install requests
+
+#provision most usual dev repos
+mkdir -p /usr/local/software
+
+cd /usr/local/software
+
+#standard sentinel find code
+git clone https://gitlab.ceda.ac.uk/ingest/sentinel.git
+
+#ceda data retriever (need to pip install this package for finder to work)
+git clone https://gitlab.ceda.ac.uk/ingest/data_retriever.git@sentinel_py3
+
+#Sentinel relay hub codebase for reporting/syncs etc
+git clone https://github.com/cedadev/ceda_relay_hub.git
 
 cp /home/vagrant/.gitconfig /root/.gitconfig
 SHELL
