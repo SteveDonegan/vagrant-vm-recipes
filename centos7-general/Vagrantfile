@@ -6,6 +6,10 @@ Vagrant.configure("2") do |config|
   config.vm.box_version = "0.0.1"
   config.vm.synced_folder "C:/vagrant-shares/general", "/vagrant-share", mount_options: ["dmode=755,fmode=644"]
   config.vm.network "private_network", ip: "192.168.50.70"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_data_retriever", destination: ".gitconfig_data_retriever"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_sentinel", destination: ".gitconfig_sentinel"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_srh_credentials", destination: ".gitconfig_srh_credentials"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\unlock-passwords", destination: "unlock-passwords"
   
   
 # copy the root key
@@ -18,10 +22,11 @@ yum install -y git
 echo "[user]" > /home/vagrant/.gitconfig
 echo "        name = Steve Donegan" >> /home/vagrant/.gitconfig
 echo "        email = steve.donegan@stfc.ac.uk" >> /home/vagrant/.gitconfig
-chown vagrant.vagrant /home/vagrant/.gitconfig
+chown vagrant.vagrant /home/vagrant/.gitconfig*
+
 
 #install python 3.8 as per https://vinodpandey.com/how-to-install-python3-on-centos-7/
-yum -y install wget make gcc openssl-devel bzip2-devel
+yum -y install wget make gcc openssl-devel bzip2-devel libffi-devel
 
 mkdir -p /tmp/
 
@@ -46,14 +51,39 @@ mkdir -p /usr/local/software
 
 cd /usr/local/software
 
+#install git-crypt
+wget --no-check-certificate https://cbs.centos.org/kojifiles/packages/git-crypt/0.5.0/1.el7/x86_64/git-crypt-0.5.0-1.el7.x86_64.rpm
+chmod 775 git-crypt-0.5.0-1.el7.x86_64.rpm
+rpm -ivh git-crypt-0.5.0-1.el7.x86_64.rpm
+
 #standard sentinel find code
-git clone https://gitlab.ceda.ac.uk/ingest/sentinel.git
+export GIT_CONFIG=/home/vagrant/.gitconfig_sentinel
+export gituser=`git config user.user`
+export gitpass=`git config user.token`
+git clone https://${gituser}:${gitpass}@gitlab.ceda.ac.uk/ingest/sentinel.git
 
 #ceda data retriever (need to pip install this package for finder to work)
-git clone https://gitlab.ceda.ac.uk/ingest/data_retriever.git@sentinel_py3
+export GIT_CONFIG=/home/vagrant/.gitconfig_data_retriever
+export gituser=`git config user.user`
+export gitpass=`git config user.token`
+
+git clone -b sentinel_py3 https://${gituser}:${gitpass}@gitlab.ceda.ac.uk/ingest/data_retriever.git
+
+#get hub credentials and unlock using passwords file
+export GIT_CONFIG=/home/vagrant/.gitconfig_srh_credentials
+export gituser=`git config user.user`
+export gitpass=`git config user.token`
+git clone  https://${gituser}:${gitpass}@gitlab.ceda.ac.uk/cedadev/srh_credentials.git
+
+cd /usr/local/software/srh_credentials
+cp /home/vagrant/unlock-passwords .
+git-crypt unlock unlock-passwords
 
 #Sentinel relay hub codebase for reporting/syncs etc
+cd ..
 git clone https://github.com/cedadev/ceda_relay_hub.git
+
+chown -R vagrant:vagrant /usr/local/software
 
 cp /home/vagrant/.gitconfig /root/.gitconfig
 SHELL
