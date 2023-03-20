@@ -9,6 +9,7 @@ Vagrant.configure("2") do |config|
   config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_data_retriever", destination: ".gitconfig_data_retriever"
   config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_sentinel", destination: ".gitconfig_sentinel"
   config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_srh_credentials", destination: ".gitconfig_srh_credentials"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_sentinel_archiver", destination: ".gitconfig_sentinel_archiver"
   config.vm.provision "file", source:"C:\\workspace\\git_creds\\unlock-passwords", destination: "unlock-passwords"
   
   
@@ -69,6 +70,13 @@ export gituser=`git config user.user`
 export gitpass=`git config user.token`
 
 git clone -b sentinel_py3 https://${gituser}:${gitpass}@gitlab.ceda.ac.uk/ingest/data_retriever.git
+
+#ceda sentinel archiver codebase
+export GIT_CONFIG=/home/vagrant/.gitconfig_sentinel_archiver
+export gituser=`git config user.user`
+export gitpass=`git config user.token`
+
+git clone https://${gituser}:${gitpass}@gitlab.ceda.ac.uk/ingest/sentinel_archiver.git
 
 #get hub credentials and unlock using passwords file
 export GIT_CONFIG=/home/vagrant/.gitconfig_srh_credentials
