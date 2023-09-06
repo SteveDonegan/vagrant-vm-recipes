@@ -3,8 +3,14 @@
 
 Vagrant.configure("2") do |config|
   config.vm.box = "cedadev/centos7"
-  config.vm.synced_folder "C:/workspace/vagrant/vms/centos7-miniconda-py3", "/vagrant-share", type: "nfs"
+  config.vm.synced_folder "C:/vagrant-shares/general", "/vagrant-share", mount_options: ["dmode=755,fmode=644"]
   config.vm.network "private_network", ip: "192.168.50.61"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_data_retriever", destination: ".gitconfig_data_retriever"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_sentinel", destination: ".gitconfig_sentinel"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_srh_credentials", destination: ".gitconfig_srh_credentials"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_sentinel_archiver", destination: ".gitconfig_sentinel_archiver"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\gitlab\\.gitconfig_ceda_srh_playbook", destination: ".gitconfig_ceda_srh_playbook"
+  config.vm.provision "file", source:"C:\\workspace\\git_creds\\unlock-passwords", destination: "unlock-passwords"
   
 # copy the root key
 config.vm.provision :shell, inline: <<SHELL
@@ -17,6 +23,58 @@ echo "[user]" > /home/vagrant/.gitconfig
 echo "        name = Steve Donegan" >> /home/vagrant/.gitconfig
 echo "        email = steve.donegan@stfc.ac.uk" >> /home/vagrant/.gitconfig
 chown vagrant.vagrant /home/vagrant/.gitconfig
+
+#install python 3.8 as per https://vinodpandey.com/how-to-install-python3-on-centos-7/
+yum -y install wget make gcc openssl-devel bzip2-devel libffi-devel
+
+mkdir -p /tmp/
+
+cd /tmp
+
+wget https://www.python.org/ftp/python/3.8.7/Python-3.8.7.tgz
+
+tar xzf Python-3.8.7.tgz
+
+cd Python-3.8.7
+./configure --enable-optimizations
+
+make altinstall
+
+ln -sfn /usr/local/bin/python3.8 /usr/bin/python3.8
+ln -sfn /usr/local/bin/pip3.8 /usr/bin/pip3.8
+
+pip3.8 install requests
+pip3.8 install click
+
+
+#provision most usual dev repos
+mkdir -p /usr/local/software
+
+cd /usr/local/software
+
+#install venv for ansible v2.11 as this needs to be separate to other standard ansible versions
+python3.8 -m venv ansible2.11
+
+source /usr/local/software/ansible2.11/bin/activate
+
+python -m pip install ansible==2.10.7
+
+source /usr/local/software/ansible2.11/bin/deactivate
+
+#now install standard ansible
+yum install ansible
+
+#install docker
+#wget --no-check-certificate https://cbs.centos.org/kojifiles/packages/git-crypt/0.5.0/1.el7/x86_64/git-crypt-0.5.0-1.el7.x86_64.rpm
+#chmod 775 git-crypt-0.5.0-1.el7.x86_64.rpm
+#rpm -ivh git-crypt-0.5.0-1.el7.x86_64.rpm
+
+cd /usr/local/software
+curl -fsSL https://get.docker.com/ | sh
+curl -L https://github.com/docker/compose/releases/download/1.24.1/docker-compose-`uname -
+s`-`uname -m` -o /usr/local/bin/docker-compose
+chmod +x /usr/local/bin/docker-compose
+ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
 
 cp /home/vagrant/.gitconfig /root/.gitconfig
 SHELL
